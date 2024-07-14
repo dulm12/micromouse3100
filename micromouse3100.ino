@@ -27,6 +27,9 @@ const int lidar3_pin = A2;
 #define MOTOR_R_REVERSED false
 #define WHEEL_RADIUS 16 // in milimetres
 
+#define DIST_TO_WALL 70 
+#define SCALE_FACTOR 20
+
 #define MAX_OUTPUT 150 // maximum pwm output of each pid controller
 
 mtrn3100::DualEncoder encoder(EN_1_A, EN_1_B, EN_2_A, EN_2_B, MOTOR_L_REVERSED, MOTOR_R_REVERSED);
@@ -75,7 +78,7 @@ void setup() {
     lidar2.setTimeout(250);
     lidar2.setAddress(0x56);
 
-        // ENABLE THIRD SENSOR AND CHANGE THE ADDRESS 
+    // ENABLE THIRD SENSOR AND CHANGE THE ADDRESS 
     // NOTE: WE DO NOT HAVE TO DISABLE THE SECOND SENSOR AS IT IS NOW ON A DIFFERENT ADDRESS 
     digitalWrite(lidar3_pin, HIGH);
     delay(50);
@@ -106,6 +109,7 @@ void setup() {
 
 
 void loop() {
+  
     Serial.print(lidar1.readRangeSingleMillimeters());
     Serial.print(" | ");
     Serial.print(lidar2.readRangeSingleMillimeters());
@@ -116,7 +120,7 @@ void loop() {
     if (lidar2.timeoutOccurred()) { Serial.print("Sensor 2 TIMEOUT"); }
     if (lidar3.timeoutOccurred()) { Serial.print("Sensor 3 TIMEOUT"); } 
 
-    double wallAdjustment = (lidar3.readRangeSingleMillimeters() - 70.0) / 20.0;
+    double wallAdjustment = (lidar3.readRangeSingleMillimeters() - DIST_TO_WALL) / SCALE_FACTOR;
 
     int adjustment = controllerH.compute(encoder.getRightRotation() - encoder.getLeftRotation() + wallAdjustment);
     motorL.setPWM(controllerL.compute(encoder.getLeftRotation()) - adjustment);   // - adjustment
